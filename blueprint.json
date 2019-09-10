@@ -15,12 +15,25 @@
         "level": "alpha",
         "patch": 0
       }
-    }
+    },
+    "timestamp": "2019-09-10T15:13:03+10:00"
   },
   "software": {
     "base": {
+      "name": "django",
+      "inherit": "https://raw.githubusercontent.com/EnginesBlueprints/django/master/blueprint.json",
+      "framework": "python3.7",
       "deployment_type": "web",
-      "http_protocol": "https_and_http"
-    }
+      "http_protocol": "https_only"
+    },
+    "installed_packages": [
+      {
+        "name": "data_matcher",
+        "download_type": "git",
+        "source_url": "https://github.com/hudgeon/data_matcher.git",
+        "destination": "/home/app/software",
+        "authentication": "credentials"
+      }
+    ]
   }
 }
