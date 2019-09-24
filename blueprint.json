@@ -16,13 +16,13 @@
         "patch": 0
       }
     },
-    "timestamp": "2019-09-24T15:32:18+10:00"
+    "timestamp": "2019-09-24T15:49:51+10:00"
   },
   "software": {
     "base": {
       "name": "django",
       "inherit": "https://raw.githubusercontent.com/EnginesBlueprints/django/master/blueprint.json",
-      "framework": "python3.7",
+      "framework": "ap_python",
       "deployment_type": "web",
       "http_protocol": "https_only"
     },
