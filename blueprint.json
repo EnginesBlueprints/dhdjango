@@ -16,7 +16,7 @@
         "patch": 0
       }
     },
-    "timestamp": "2019-09-26T13:07:48+10:00"
+    "timestamp": "2019-09-26T14:27:12+10:00"
   },
   "software": {
     "base": {
@@ -104,7 +104,7 @@
     ],
     "file_write_permissions": [
       {
-        "path": "/home/app/data_watcher",
+        "path": "/home/app/data_watcher/",
         "recursive": true
       }
     ],
