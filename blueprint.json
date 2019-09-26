@@ -16,7 +16,7 @@
         "patch": 0
       }
     },
-    "timestamp": "2019-09-27T08:30:54+10:00"
+    "timestamp": "2019-09-27T08:57:16+10:00"
   },
   "software": {
     "base": {
@@ -29,7 +29,7 @@
     "scripts": {
       "start": {
         "language": "sh",
-        "content": "#!/bin/sh\r\n\r\nunset DJANGO_SETTINGS_MODULE\r\n\r\ncd /home/app/data_matcher\r\ngit pull\r\n\r\n. /home/app/venv/bin/activate\r\n\r\ncd /home/app/data_matcher\r\n\r\npython manage.py migrate\r\n"
+        "content": "#!/bin/sh\r\n\r\nunset DJANGO_SETTINGS_MODULE\r\n\r\ncd /home/app/data_matcher\r\ngit pull\r\n\r\n. /home/app/venv/bin/activate\r\n\r\ncd /home/app/data_matcher\r\n\r\npython manage.py migrate\r\n\r\nif test -f /home/fs/persist/.secret\r\n then\r\n  echo ewrewr > /home/fs/persist/.secret\r\nfi\r\n\r\nspiped -d -t '[127.0.0.1]:6379' -s '[$redis_host]:8025' -k /home/fs/persist/.secret E -p /home/engines/run/spiped.pid"
       },
       "install": {
         "content": "#!/bin/sh\r\n\r\necho elasticsearch_token: $elasticsearch_token > /home/app/.env.yaml\r\ncp  /home/app/.env.yaml  /home/app/data_matcher/.env.yaml"
@@ -83,6 +83,15 @@
         "input": {
           "type": "string"
         }
+      },
+      {
+        "name": "redis_host",
+        "value": "redis.engines.internal",
+        "mandatory": true,
+        "ask_at_build_time": true,
+        "input": {
+          "type": "string"
+        }
       }
     ],
     "template_files": [
@@ -129,6 +138,25 @@
         ],
         "script": {
           "content": "#!/bin/sh\r\n\r\necho elasticsearch_token: $elasticsearch_token > /home/app/.env.yaml\r\ncp  /home/app/.env.yaml  /home/app/data_matcher/.env.yaml"
+        }
+      },
+      {
+        "name": "set_redis_key",
+        "label": "Set Redis Key",
+        "return_type": "plain_text",
+        "variables": [
+          {
+            "name": "redis_key",
+            "mandatory": true,
+            "input": {
+              "type": "string",
+              "label": "Redis Key"
+            }
+          }
+        ],
+        "script": {
+          "language": "sh",
+          "content": "#!/bin/sh\r\n\r\necho -n $redis_key > /home/fs/persist/.secret\r\n\r\nif test $? -eq 0\r\n then\r\n  echo \"secret set\"\r\n else\r\n   echo \"secret set failed\"\r\n   exit 2\r\nfi\r\n\r\nkill -TERM ` cat /home/engines/run/spiped.pid`\r\nsleep 1\r\n\r\nspiped -d -t '[127.0.0.1]:6379' -s '[$redis_host]:8025' -k /home/fs/persist/.secret E -p /home/engines/run/spiped.pid"
         }
       }
     ]
