@@ -16,7 +16,7 @@
         "patch": 0
       }
     },
-    "timestamp": "2019-09-26T11:44:24+10:00"
+    "timestamp": "2019-09-26T12:18:03+10:00"
   },
   "software": {
     "base": {
@@ -27,6 +27,13 @@
       "http_protocol": "https_only"
     },
     "scripts": {
+      "start": {
+        "language": "sh",
+        "content": "#!/bin/sh\r\n\r\nunset DJANGO_SETTINGS_MODULE"
+      },
+      "install": {
+        "content": "#!/bin/sh\r\n\r\necho elasticsearch_token: $elasticsearch_token > /home/app/.env.yaml"
+      },
       "first_run": {
         "language": "sh",
         "content": "#!/bin/sh\r\n\r\nunset DJANGO_SETTINGS_MODULE\r\n\r\n\r\n. /home/app/venv/bin/activate\r\n\r\ncd /home/app/data_matcher\r\n\r\npython manage.py migrate\r\n\r\n"
@@ -68,6 +75,17 @@
         }
       }
     ],
+    "environment_variables": [
+      {
+        "name": "elasticsearch_token",
+        "mandatory": true,
+        "ask_at_build_time": true,
+        "build_time_only": true,
+        "input": {
+          "type": "string"
+        }
+      }
+    ],
     "template_files": [
       {
         "path": "/home/app/data_matcher/data_matcher.settings",
@@ -75,12 +93,12 @@
       },
       {
         "path": "site_config.conf",
-        "content": "<VirtualHost *:8000>\r\n\r\n    Alias /static /home/app/static\r\n    <Directory /home/app/static>\r\n        Require all granted\r\n    </Directory>\r\n\r\n    Alias /uploaded /home/fs/persist\r\n    <Directory /home/fs/persist>\r\n        Require all granted\r\n    </Directory>\r\n\r\nWSGIPassAuthorization On\r\nWSGIScriptAlias / /home/app/data_matcher/_data_matcher/wsgi.py\r\n\r\nWSGIDaemonProcess data_matcher python-path=/home/app/software/data_matcher:/home/app/venv/:/home/home_dir/.local/lib/python3.7/site-packages\r\n    LogLevel info\r\n    <Directory /home/app/data_matcher/data_matcher >\r\n        WSGIProcessGroup data_matcher\r\n        WSGIApplicationGroup %{GLOBAL}\r\n        <Files wsgi.py>\r\n            Require all granted\r\n        </Files>\r\n    </Directory>\r\n</VirtualHost>\r\n"
+        "content": "<VirtualHost *:8000>\r\n\r\n    Alias /static /home/app/static\r\n    <Directory /home/app/static>\r\n        Require all granted\r\n    </Directory>\r\n\r\n    Alias /uploaded /home/fs/persist\r\n    <Directory /home/fs/persist>\r\n        Require all granted\r\n    </Directory>\r\n\r\nWSGIPassAuthorization On\r\nWSGIScriptAlias / /home/app/data_matcher/data_matcher/wsgi.py\r\n\r\nWSGIDaemonProcess data_matcher python-path=/home/app/data_matcher:/home/app/venv/:/home/home_dir/.local/lib/python3.7/site-packages\r\n    LogLevel info\r\n    <Directory /home/app/data_matcher/data_matcher >\r\n        WSGIProcessGroup data_matcher\r\n        WSGIApplicationGroup %{GLOBAL}\r\n        <Files wsgi.py>\r\n            Require all granted\r\n        </Files>\r\n    </Directory>\r\n</VirtualHost>\r\n"
       }
     ],
     "replacement_strings": [
       {
-        "string": "/^ALLOWED_HOSTS.*/s//ALLOWED_HOSTS = [''_Engines_Builder(fqdn)']/",
+        "string": "/^ALLOWED_HOSTS.*/s//ALLOWED_HOSTS = ['_Engines_Builder(fqdn)']/",
         "source_file": "/data_matcher/data_matcher/settings.py",
         "destination_file": "/data_matcher/data_matcher/settings.py"
       }
@@ -182,6 +200,22 @@
         "return_type": "plain_text",
         "script": {
           "content": "#!/usr/bin/expect\r\n\r\nset timeout 20\r\nspawn python manage.py changepassword $env(user_name)\r\nexpect \"Changing password for user '$env(user_name)'\"\r\n\r\nexpect \"Password:\" { send \"$env(password)\\r\" }\r\nexpect \"Password (again):\" { send \"$env(password)\\r\" }\r\nexpect  eof\r\n\r\n"
+        }
+      },
+      {
+        "name": "set_elasticsearch_token",
+        "return_type": "plain_text",
+        "variables": [
+          {
+            "name": "elasticsearch_token",
+            "mandatory": true,
+            "input": {
+              "type": "string"
+            }
+          }
+        ],
+        "script": {
+          "content": "#!/bin/sh\r\n\r\necho elasticsearch_token: $elasticsearch_token >/home/app/.env.yaml"
         }
       }
     ]
