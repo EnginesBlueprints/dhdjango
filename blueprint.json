@@ -16,7 +16,7 @@
         "patch": 0
       }
     },
-    "timestamp": "2019-09-26T13:06:30+10:00"
+    "timestamp": "2019-09-26T13:07:48+10:00"
   },
   "software": {
     "base": {
@@ -128,7 +128,7 @@
           }
         ],
         "script": {
-          "content": "#!/bin/sh\r\n\r\necho elasticsearch_token: $elasticsearch_token >/home/app/.env.yaml"
+          "content": "#!/bin/sh\r\n\r\necho elasticsearch_token: $elasticsearch_token > /home/app/.env.yaml\r\ncp  /home/app/.env.yaml  /home/app/data_matcher/.env.yaml"
         }
       }
     ]
