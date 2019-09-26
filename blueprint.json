@@ -16,7 +16,7 @@
         "patch": 0
       }
     },
-    "timestamp": "2019-09-26T11:39:56+10:00"
+    "timestamp": "2019-09-26T11:44:24+10:00"
   },
   "software": {
     "base": {
@@ -81,8 +81,8 @@
     "replacement_strings": [
       {
         "string": "/^ALLOWED_HOSTS.*/s//ALLOWED_HOSTS = [''_Engines_Builder(fqdn)']/",
-        "source_file": "/home/app/data_matcher/data_matcher/settings.py",
-        "destination_file": "/home/app/data_matcher/data_matcher/settings.py"
+        "source_file": "/data_matcher/data_matcher/settings.py",
+        "destination_file": "/data_matcher/data_matcher/settings.py"
       }
     ],
     "persistent_files": [
