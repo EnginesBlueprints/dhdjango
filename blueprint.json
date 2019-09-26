@@ -16,7 +16,7 @@
         "patch": 0
       }
     },
-    "timestamp": "2019-09-24T15:49:51+10:00"
+    "timestamp": "2019-09-26T11:26:48+10:00"
   },
   "software": {
     "base": {
@@ -26,6 +26,12 @@
       "deployment_type": "web",
       "http_protocol": "https_only"
     },
+    "scripts": {
+      "first_run": {
+        "language": "sh",
+        "content": "#!/bin/sh\r\n\r\nunset DJANGO_SETTINGS_MODULE\r\n\r\n\r\n. /home/app/venv/bin/activate\r\n\r\ncd /home/app/data_matcher\r\n\r\npython manage.py migrate\r\n\r\n"
+      }
+    },
     "installed_packages": [
       {
         "name": "data_matcher",
@@ -34,6 +40,149 @@
         "destination": "/home/app/data_matcher",
         "path_to_extracted": "data_matcher",
         "authentication": "credentials"
+      }
+    ],
+    "required_modules": [
+      {
+        "name": "requests",
+        "type": "python"
+      },
+      {
+        "name": "elasticsearch",
+        "type": "python"
+      }
+    ],
+    "service_configurations": [
+      {
+        "publisher_namespace": "EnginesSystem",
+        "type_path": "filesystem/local/filesystem",
+        "variables": {
+          "service_name": "persist",
+          "volume_src": "",
+          "engine_path": "",
+          "permissions": "rw",
+          "user": "_Engines_Builder(cont_user_id)",
+          "group": "_Engines_Builder(data_gid)",
+          "fw_user": "_Engines_Builder(cont_user_id)",
+          "exclude_from_backup": "false"
+        }
+      }
+    ],
+    "template_files": [
+      {
+        "path": "/home/app/data_matcher/data_matcher.settings",
+        "content": "ALLOWED_HOSTS = ['_Engines_Builder(fqdn)']\r\nDEBUG = False\r\nDEFAULT_FROM_EMAIL = 'webmaster@_Engines_Builder(fqdn)'"
+      },
+      {
+        "path": "site_config.conf",
+        "content": "<VirtualHost *:8000>\r\n\r\n    Alias /static /home/app/static\r\n    <Directory /home/app/static>\r\n        Require all granted\r\n    </Directory>\r\n\r\n    Alias /uploaded /home/fs/persist\r\n    <Directory /home/fs/persist>\r\n        Require all granted\r\n    </Directory>\r\n\r\nWSGIPassAuthorization On\r\nWSGIScriptAlias / /home/app/data_matcher/_data_matcher/wsgi.py\r\n\r\nWSGIDaemonProcess data_matcher python-path=/home/app/software/data_matcher:/home/app/venv/:/home/home_dir/.local/lib/python3.7/site-packages\r\n    LogLevel info\r\n    <Directory /home/app/data_matcher/data_matcher >\r\n        WSGIProcessGroup data_matcher\r\n        WSGIApplicationGroup %{GLOBAL}\r\n        <Files wsgi.py>\r\n            Require all granted\r\n        </Files>\r\n    </Directory>\r\n</VirtualHost>\r\n"
+      }
+    ],
+    "replacement_strings": [
+      {
+        "string": "/^ALLOWED_HOSTS.*/s//ALLOWED_HOSTS = [''_Engines_Builder(fqdn)']/",
+        "source_file": " /home/app/data_matcher/data_matcher/settings.py",
+        "destination_file": " /home/app/data_matcher/data_matcher/settings.py"
+      }
+    ],
+    "persistent_files": [
+      {
+        "path": "/home/app/data_matcher/db.sqlite3",
+        "volume_name": "persist"
+      }
+    ],
+    "actionators": [
+      {
+        "name": "create_super_user",
+        "return_type": "plain_text",
+        "enable_logging": true,
+        "variables": [
+          {
+            "name": "user_name",
+            "mandatory": true,
+            "input": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email_address",
+            "mandatory": true,
+            "input": {
+              "type": "email"
+            }
+          },
+          {
+            "name": "password",
+            "mandatory": true,
+            "input": {
+              "type": "password_with_confirmation"
+            }
+          }
+        ],
+        "script": {
+          "content": "#!/bin/sh\r\n\r\nexport user_name email_address password\r\n. /home/app/venv/bin/activate\r\ncd /home/app/data_matcher\r\n\r\n/home/engines/scripts/actionators/create_super_user_expect.sh\r\n\r\n"
+        }
+      },
+      {
+        "name": "change_super_user_password",
+        "return_type": "plain_text",
+        "variables": [
+          {
+            "name": "username",
+            "mandatory": true,
+            "input": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "password",
+            "mandatory": true,
+            "input": {
+              "type": "password_with_confirmation"
+            }
+          }
+        ],
+        "script": {
+          "content": "#!/bin/sh\r\n\r\nexport user_name password\r\n. /home/app/venv/bin/activate\r\ncd /home/app/data_matcher\r\n\r\n/home/engines/scripts/actionators/create_super_changepass_expect.sh\r\n\r\n"
+        }
+      },
+      {
+        "name": "create_super_user_expect",
+        "return_type": "plain_text",
+        "enable_logging": true,
+        "variables": [
+          {
+            "name": "user_name",
+            "mandatory": true,
+            "input": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email_address",
+            "mandatory": true,
+            "input": {
+              "type": "email"
+            }
+          },
+          {
+            "name": "password",
+            "mandatory": true,
+            "input": {
+              "type": "password_with_confirmation"
+            }
+          }
+        ],
+        "script": {
+          "content": "#!/usr/bin/expect\r\n\r\nset timeout 20\r\nspawn python manage.py createsuperuser\r\nexpect \"Username:\" { send \"$env(user_name)\\r\" }\r\nexpect \"Email address:\" { send \"$env(email_address)\\r\" }\r\nexpect \"Password:\" { send \"$env(password)\\r\" }\r\nexpect \"Password (again):\" { send \"$env(password)\\r\" }\r\nexpect  eof\r\n\r\n"
+        }
+      },
+      {
+        "name": "create_super_changepass_expect",
+        "return_type": "plain_text",
+        "script": {
+          "content": "#!/usr/bin/expect\r\n\r\nset timeout 20\r\nspawn python manage.py changepassword $env(user_name)\r\nexpect \"Changing password for user '$env(user_name)'\"\r\n\r\nexpect \"Password:\" { send \"$env(password)\\r\" }\r\nexpect \"Password (again):\" { send \"$env(password)\\r\" }\r\nexpect  eof\r\n\r\n"
+        }
       }
     ]
   }
